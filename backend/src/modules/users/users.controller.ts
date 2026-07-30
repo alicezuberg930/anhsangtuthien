@@ -2,9 +2,9 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestj
 import { UsersService } from './users.service'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
-import { AuthRequired, ResponseMessage } from 'src/common/decorators/public.decorator'
+import { AuthRequired, ResponseMessage } from '../../common/decorators/public.decorator'
 import { UserQuery } from './query/user.query'
-import { CurrentUser } from 'src/common/decorators/id.decorator'
+import { CurrentUser } from '../../common/decorators/id.decorator'
 
 @Controller('users')
 export class UsersController {

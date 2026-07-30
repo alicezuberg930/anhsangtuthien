@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common'
-import { ResponseMessage } from 'src/common/decorators/public.decorator'
+import { ResponseMessage } from '../../common/decorators/public.decorator'
 import { EventData } from './dto/create-event.dto'
 import { UpdateEventData } from './dto/update-event.dto'
 import { EventsService } from './events.service'

@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestj
 import { BannersService } from './banners.service'
 import { BannerData } from './dto/create-banner.dto'
 import { UpdateBannerData } from './dto/update-banner.dto'
-import { ResponseMessage } from 'src/common/decorators/public.decorator'
+import { ResponseMessage } from '../../common/decorators/public.decorator'
 import { QueryBanner } from './dto/query-banner.dto'
 
 @Controller('banners')

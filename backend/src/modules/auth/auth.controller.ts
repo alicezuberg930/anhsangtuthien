@@ -3,7 +3,7 @@ import type { CookieOptions, Response } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/create-auth.dto';
 import { LocalAuthGuard } from './passport/local-auth.guard';
-import { Public, ResponseMessage } from 'src/common/decorators/public.decorator';
+import { Public, ResponseMessage } from '../../common/decorators/public.decorator';
 import { VerifyDto } from './dto/verify-auth.dto';
 import { ConfigService } from '@nestjs/config';
 

@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common'
-import { ResponseMessage } from 'src/common/decorators/public.decorator'
+import { ResponseMessage } from '../../common/decorators/public.decorator'
 import { LogsService } from './logs.service'
 import { Log } from './schemas/log.schema'
 

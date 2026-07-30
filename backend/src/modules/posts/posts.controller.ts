@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { PostsService } from './posts.service';
-import { ResponseMessage } from 'src/common/decorators/public.decorator';
+import { ResponseMessage } from '../../common/decorators/public.decorator';
 import { PostData } from './dto/create-post.dto';
 import { UpdatePostData } from './dto/update-post.dto';
 import { QueryPost } from './dto/query-post';

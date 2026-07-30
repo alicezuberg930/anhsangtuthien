@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body } from '@nestjs/common'
 import { InformationData } from './dto/information.dto'
-import { ResponseMessage } from 'src/common/decorators/public.decorator'
+import { ResponseMessage } from '../../common/decorators/public.decorator'
 import { InformationService } from './information.service'
 
 @Controller('information')

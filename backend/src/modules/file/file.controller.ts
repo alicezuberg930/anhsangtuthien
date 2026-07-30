@@ -1,7 +1,7 @@
 import { Controller, Post, UseInterceptors, UploadedFiles } from '@nestjs/common'
 import { FileService } from './file.service'
 import { FilesInterceptor } from '@nestjs/platform-express'
-import { ResponseMessage } from 'src/common/decorators/public.decorator'
+import { ResponseMessage } from '../../common/decorators/public.decorator'
 
 @Controller('file')
 export class FileController {

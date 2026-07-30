@@ -2,13 +2,17 @@ import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
 import { ConfigService } from '@nestjs/config'
 import { ValidationPipe } from '@nestjs/common'
-import express from 'express'
+import express, { NextFunction, Request, Response } from 'express'
 import { ExpressAdapter } from '@nestjs/platform-express'
+import { INestApplication } from '@nestjs/common'
 
 const server = express()
+let app: INestApplication | null = null
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, new ExpressAdapter(server))
+  if (app) return app
+
+  app = await NestFactory.create(AppModule, new ExpressAdapter(server))
   const configService = app.get(ConfigService)
   const cspValue = [
     "default-src 'self'",
@@ -24,7 +28,7 @@ async function bootstrap() {
     "upgrade-insecure-requests",
   ].join('; ')
 
-  app.use((req, res, next) => {
+  app.use((_req: Request, res: Response, next: NextFunction) => {
     res.setHeader('Content-Security-Policy', cspValue)
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
     res.setHeader('X-Content-Type-Options', 'nosniff')
@@ -42,7 +46,7 @@ async function bootstrap() {
   }))
   // cors configurations - allow origins from environment variable or defaults
   const allowedOrigins = [
-    'http://localhost:5173',
+    // 'http://localhost:5173',
     'https://www.anhsangtuthien.com',
   ]
   const corsOrigins = configService.get<string>('CORS_ORIGINS')
@@ -55,7 +59,18 @@ async function bootstrap() {
     'preflightContinue': false,
     'credentials': true,
   })
-  await app.listen(4000)
+
+  await app.init()
+  return app
 }
-bootstrap()
-export default server
+
+const isVercel = Boolean(process.env.VERCEL)
+
+if (!isVercel) {
+  bootstrap().then(app => app.listen(4000))
+}
+
+export default async function handler(req: Request, res: Response) {
+  await bootstrap()
+  return server(req, res)
+}
