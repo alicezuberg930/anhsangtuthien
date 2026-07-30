@@ -14,7 +14,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { useCreateBannerHook, useUpdateBannerHook } from '@/hooks/banner.hook'
-import { useUploadFileHook } from '@/hooks/file.hook'
+import { files } from '@/lib/queries/file'
+import { useMutation } from '@tanstack/react-query'
 
 type BannerFormValues = {
   order: string
@@ -70,7 +71,7 @@ export const BannersActionDialog = ({
   onOpenChange,
 }: BannersActionDialogProps) => {
   const isEdit = !!currentRow
-  const upload = useUploadFileHook()
+  const { mutateAsync: upload } = useMutation(files().upload.mutationOptions())
   const createBanner = useCreateBannerHook()
   const updateBanner = useUpdateBannerHook()
   const form = useForm<BannerFormValues>({
@@ -93,7 +94,7 @@ export const BannersActionDialog = ({
       if (isLocalUploadImage(values.image)) {
         const formData = new FormData()
         formData.set('files', values.image)
-        const response = await upload.mutateAsync({ file: formData })
+        const response = await upload({ file: formData })
         imageUrl = response.data![0] ?? ''
       }
 

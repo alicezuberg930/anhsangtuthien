@@ -176,7 +176,7 @@ export const VideoPlayer = ({ videoUrl }: VideoPlayerProps) => {
     }, [volume])
 
     return (
-        <div ref={videoContainer} className='relative h-fit aspect-video'>
+        <div ref={videoContainer} className='relative h-fit aspect-video w-full'>
             <video
                 ref={videoPlayer}
                 className='w-full h-full rounded-xl'

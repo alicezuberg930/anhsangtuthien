@@ -14,7 +14,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { useCreateEventHook, useUpdateEventHook } from '@/hooks/event.hook'
-import { useUploadFileHook } from '@/hooks/file.hook'
+import { files } from '@/lib/queries/file'
+import { useMutation } from '@tanstack/react-query'
 
 type EventFormValues = {
   isActive: boolean
@@ -67,7 +68,7 @@ export const EventsActionDialog = ({
   onOpenChange,
 }: EventsActionDialogProps) => {
   const isEdit = !!currentRow
-  const upload = useUploadFileHook()
+  const { mutateAsync: upload } = useMutation(files().upload.mutationOptions())
   const createEvent = useCreateEventHook()
   const updateEvent = useUpdateEventHook()
   const form = useForm<EventFormValues>({
@@ -90,7 +91,7 @@ export const EventsActionDialog = ({
       if (isLocalUploadImage(values.image)) {
         const formData = new FormData()
         formData.set('files', values.image)
-        const response = await upload.mutateAsync({ file: formData })
+        const response = await upload({ file: formData })
         imageUrl = response.data![0] ?? ''
       }
 

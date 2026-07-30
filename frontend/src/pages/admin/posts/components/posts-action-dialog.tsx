@@ -1,8 +1,7 @@
 import { useEffect } from 'react'
 import { type Resolver, useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { postCategoryTitles, type Post, type PostCategory, type PostPayload, } from '@/@types/post'
-import { useUploadFileHook } from '@/hooks/file.hook'
+import { postCategoryTitles, type Post, type PostPayload, } from '@/@types/post'
 import {
   FormProvider,
   RFHStyledSelect,
@@ -11,7 +10,7 @@ import {
   RHFTextField,
   RHFUpload,
 } from '@/components/hook-form'
-import { isLocalUploadImage, type UploadImage, } from '@/components/upload'
+import { isLocalUploadImage } from '@/components/upload'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -25,6 +24,7 @@ import moment from 'moment'
 import { postFormSchema } from '@/lib/validators/post-validator'
 import { useMutation } from '@tanstack/react-query'
 import { posts } from '@/lib/queries/post'
+import { files } from '@/lib/queries/file'
 
 const zodResolver: Resolver<z.infer<typeof postFormSchema>> = async (values) => {
   const result = postFormSchema.safeParse(values)
@@ -67,7 +67,7 @@ export const PostsActionDialog = ({
   onOpenChange,
 }: PostsActionDialogProps) => {
   const isEdit = !!currentRow
-  const upload = useUploadFileHook()
+  const { mutateAsync: upload } = useMutation(files().upload.mutationOptions())
   const { mutateAsync: create } = useMutation(posts().create.mutationOptions())
   const { mutateAsync: update } = useMutation(posts().update.mutationOptions())
   const form = useForm<z.infer<typeof postFormSchema>>({
@@ -90,7 +90,7 @@ export const PostsActionDialog = ({
     const formData = new FormData()
     if (isLocalUploadImage(values.cover)) {
       formData.set('files', values.cover)
-      const response = await upload.mutateAsync({ file: formData })
+      const response = await upload({ file: formData })
       coverUrl = response.data![0]
     }
     formData.delete('files')
@@ -99,7 +99,7 @@ export const PostsActionDialog = ({
         formData.append('files', values.images[i])
       }
     }
-    const imagesResponse = await upload.mutateAsync({ file: formData })
+    const imagesResponse = await upload({ file: formData })
     images = imagesResponse.data!
 
     const post: PostPayload = {
