@@ -34,11 +34,6 @@ export const getProfile = async () => {
     return httpClient.get<ProfileResponse>(API.USERS.PROFILE)
 }
 
-// common
-export const uploadFile = async ({ file }: UploadFileParams) => {
-    return httpClient.post<UploadFileResponse>(API.UPLOAD_FILE, file)
-}
-
 // banner
 export const createBanner = async ({ banner }: CreateBannerParams) => {
     return httpClient.post<BannerMutationResponse>(API.BANNERS, banner)
