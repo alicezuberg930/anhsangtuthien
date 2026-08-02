@@ -66,7 +66,7 @@ export class HttpClient {
     >(),
   }
 
-  private async fetchJson<T = any>(
+  private async fetchJson<T = unknown>(
     url: string,
     options: RequestInit = {}
   ): Promise<T> {
@@ -124,7 +124,7 @@ export class HttpClient {
     }
   }
 
-  get<T = any>(
+  get<T = unknown>(
     endpoint: string,
     params: Record<string, unknown> = {},
     options?: RequestInit
@@ -155,7 +155,7 @@ export class HttpClient {
     )
   }
 
-  post<T = any>(endpoint: string, body?: unknown, options?: RequestInit) {
+  post<T = unknown>(endpoint: string, body?: unknown, options?: RequestInit) {
     return this.fetchJson<T>(
       getRequestUrl(endpoint),
       {
@@ -172,7 +172,7 @@ export class HttpClient {
     )
   }
 
-  put<T = any>(endpoint: string, body?: unknown, options?: RequestInit) {
+  put<T = unknown>(endpoint: string, body?: unknown, options?: RequestInit) {
     return this.fetchJson<T>(
       getRequestUrl(endpoint),
       {
@@ -189,7 +189,7 @@ export class HttpClient {
     )
   }
 
-  patch<T = any>(endpoint: string, body?: unknown, options?: RequestInit) {
+  patch<T = unknown>(endpoint: string, body?: unknown, options?: RequestInit) {
     return this.fetchJson<T>(
       getRequestUrl(endpoint),
       {
@@ -206,7 +206,7 @@ export class HttpClient {
     )
   }
 
-  delete<T = any>(endpoint: string, options?: RequestInit) {
+  delete<T = unknown>(endpoint: string, options?: RequestInit) {
     return this.fetchJson<T>(
       getRequestUrl(endpoint),
       {
