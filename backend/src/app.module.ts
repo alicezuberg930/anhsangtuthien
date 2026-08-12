@@ -17,9 +17,21 @@ import { EventsModule } from './modules/events/events.module'
 import { IpWhitelistMiddleware } from './common/middleware/ip.whitelist'
 import { LogsModule } from './modules/logs/logs.module'
 import { JwtAuthGuard } from './modules/auth/passport/jwt-auth.guard'
+import { validateEnvironment } from './config/environment'
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validate: validateEnvironment,
+    }),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.getOrThrow<string>('MONGODB_URI'),
+      }),
+      inject: [ConfigService],
+    }),
     UsersModule,
     AuthModule,
     InformationModule,
@@ -28,23 +40,13 @@ import { JwtAuthGuard } from './modules/auth/passport/jwt-auth.guard'
     BannersModule,
     EventsModule,
     LogsModule,
-    // Env config module
-    ConfigModule.forRoot({ isGlobal: true }),
-    // Mongodb config mondule
-    MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGODB_URI'),
-      }),
-      inject: [ConfigService],
-    }),
   ],
   controllers: [AppController],
   providers: [
     AppService,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },
-    { provide: APP_FILTER, useClass: AllExceptionsFilter }
+    { provide: APP_FILTER, useClass: AllExceptionsFilter },
   ],
 })
 export class AppModule {

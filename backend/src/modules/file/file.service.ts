@@ -1,30 +1,72 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
+import {
+  BadRequestException,
+  Injectable,
+  ServiceUnavailableException,
+} from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
 import { v2 as cloudinary } from 'cloudinary'
 import { UploadApiResponse } from 'cloudinary'
-import * as fs from 'fs'
 
 @Injectable()
 export class FileService {
+  constructor(private readonly configService: ConfigService) {}
+
+  private configureCloudinary() {
+    const cloudName = this.configService.get<string>('CLOUDINARY_CLOUD_NAME')
+    const apiKey = this.configService.get<string>('CLOUDINARY_API_KEY')
+    const apiSecret = this.configService.get<string>('CLOUDINARY_API_SECRET')
+
+    if (!cloudName || !apiKey || !apiSecret) {
+      throw new ServiceUnavailableException('File storage is not configured')
+    }
+
+    cloudinary.config({
+      cloud_name: cloudName,
+      api_key: apiKey,
+      api_secret: apiSecret,
+    })
+  }
+
+  private uploadBuffer(file: Express.Multer.File): Promise<UploadApiResponse> {
+    return new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: 'webtinhthuong', resource_type: 'image' },
+        (error, result) => {
+          if (error) {
+            reject(error)
+            return
+          }
+
+          if (!result) {
+            reject(new Error('Cloudinary returned no upload result'))
+            return
+          }
+
+          resolve(result)
+        },
+      )
+
+      stream.end(file.buffer)
+    })
+  }
+
   async upload(files: Array<Express.Multer.File>) {
+    if (!files?.length) {
+      throw new BadRequestException('No files were provided')
+    }
+
     try {
-      let fileUrls = []
-      cloudinary.config({
-        cloud_name: 'dopxhmw1q',
-        api_key: process.env.CLOUDINARY_API_KEY,
-        api_secret: process.env.CLOUDINARY_API_SECRET
-      })
-      for (let i = 0; i < files.length; i++) {
-        let response: UploadApiResponse = await cloudinary.uploader.upload(files[i].path, {
-          folder: 'webtinhthuong', resource_type: 'image',
-        })
-        fileUrls.push(response.secure_url)
-        fs.unlink(files[i].path, (err) => {
-          if (err) console.error(`Error deleting file ${files[i].path}: ${err.message}`)
-          else console.log(`File deleted: ${files[i].path}`)
-        })
-      }
-      return fileUrls
+      this.configureCloudinary()
+      const responses = await Promise.all(
+        files.map((file) => this.uploadBuffer(file)),
+      )
+
+      return responses.map((response) => response.secure_url)
     } catch (error) {
+      if (error instanceof ServiceUnavailableException) {
+        throw error
+      }
+
       throw new BadRequestException(error)
     }
 
@@ -47,11 +89,7 @@ export class FileService {
 
   async delete(fileUrls: string[]) {
     try {
-      cloudinary.config({
-        cloud_name: 'dopxhmw1q',
-        api_key: process.env.CLOUDINARY_API_KEY,
-        api_secret: process.env.CLOUDINARY_API_SECRET
-      })
+      this.configureCloudinary()
       // Extract the public ID from the URL
       for (let i = 0; i < fileUrls.length; i++) {
         const publicId = fileUrls[i].split('/').slice(-2).join('/').replace(/\.[^/.]+$/, '')
@@ -61,6 +99,10 @@ export class FileService {
         }
       }
     } catch (error) {
+      if (error instanceof ServiceUnavailableException) {
+        throw error
+      }
+
       throw new BadRequestException(error)
     }
   }

@@ -7,12 +7,10 @@ import { ExpressAdapter } from '@nestjs/platform-express'
 import { INestApplication } from '@nestjs/common'
 
 const server = express()
-let app: INestApplication | null = null
+let appPromise: Promise<INestApplication> | null = null
 
-async function bootstrap() {
-  if (app) return app
-
-  app = await NestFactory.create(AppModule, new ExpressAdapter(server))
+async function createApp() {
+  const app = await NestFactory.create(AppModule, new ExpressAdapter(server))
   const configService = app.get(ConfigService)
   const cspValue = [
     "default-src 'self'",
@@ -64,10 +62,24 @@ async function bootstrap() {
   return app
 }
 
+function bootstrap() {
+  if (!appPromise) {
+    appPromise = createApp().catch((error) => {
+      appPromise = null
+      throw error
+    })
+  }
+
+  return appPromise
+}
+
 const isVercel = Boolean(process.env.VERCEL)
 
 if (!isVercel) {
-  bootstrap().then(app => app.listen(4000))
+  bootstrap().then((app) => {
+    const configService = app.get(ConfigService)
+    return app.listen(configService.get<number>('PORT', 4000))
+  })
 }
 
 export default async function handler(req: Request, res: Response) {
