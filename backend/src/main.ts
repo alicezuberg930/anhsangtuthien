@@ -44,7 +44,7 @@ async function createApp() {
   }))
   // cors configurations - allow origins from environment variable or defaults
   const allowedOrigins = [
-    // 'http://localhost:5173',
+    'http://localhost:5173',
     'https://www.anhsangtuthien.com',
   ]
   const corsOrigins = configService.get<string>('CORS_ORIGINS')

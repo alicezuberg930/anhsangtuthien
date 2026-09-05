@@ -22,7 +22,6 @@ import type {
     GetEventsParams,
     UpdateEventParams,
 } from '@/@types/event'
-import type { UploadFileParams, UploadFileResponse } from '@/@types/file'
 import { API } from '../lib/api'
 
 // auth

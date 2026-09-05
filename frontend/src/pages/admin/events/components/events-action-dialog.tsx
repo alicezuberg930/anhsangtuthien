@@ -87,14 +87,12 @@ export const EventsActionDialog = ({
   const onSubmit = async (values: EventFormValues) => {
     try {
       let imageUrl = typeof values.image === 'string' ? values.image : ''
-
       if (isLocalUploadImage(values.image)) {
         const formData = new FormData()
         formData.set('files', values.image)
-        const response = await upload({ file: formData })
+        const response = await upload(formData)
         imageUrl = response.data![0] ?? ''
       }
-
       const event: EventPayload = {
         isActive: values.isActive,
         image: imageUrl,

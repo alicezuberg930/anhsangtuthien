@@ -12,18 +12,27 @@ export class FileService {
   constructor(private readonly configService: ConfigService) {}
 
   private configureCloudinary() {
-    const cloudName = this.configService.get<string>('CLOUDINARY_CLOUD_NAME')
-    const apiKey = this.configService.get<string>('CLOUDINARY_API_KEY')
-    const apiSecret = this.configService.get<string>('CLOUDINARY_API_SECRET')
+    const config = {
+      cloudName: this.configService.get<string>('CLOUDINARY_CLOUD_NAME'),
+      apiKey: this.configService.get<string>('CLOUDINARY_API_KEY'),
+      apiSecret: this.configService.get<string>('CLOUDINARY_API_SECRET'),
+    }
+    const missingVariables = [
+      !config.cloudName && 'CLOUDINARY_CLOUD_NAME',
+      !config.apiKey && 'CLOUDINARY_API_KEY',
+      !config.apiSecret && 'CLOUDINARY_API_SECRET',
+    ].filter(Boolean)
 
-    if (!cloudName || !apiKey || !apiSecret) {
-      throw new ServiceUnavailableException('File storage is not configured')
+    if (missingVariables.length > 0) {
+      throw new ServiceUnavailableException(
+        `File storage is not configured: missing ${missingVariables.join(', ')}`,
+      )
     }
 
     cloudinary.config({
-      cloud_name: cloudName,
-      api_key: apiKey,
-      api_secret: apiSecret,
+      cloud_name: config.cloudName,
+      api_key: config.apiKey,
+      api_secret: config.apiSecret,
     })
   }
 

@@ -94,7 +94,7 @@ export const BannersActionDialog = ({
       if (isLocalUploadImage(values.image)) {
         const formData = new FormData()
         formData.set('files', values.image)
-        const response = await upload({ file: formData })
+        const response = await upload(formData)
         imageUrl = response.data![0] ?? ''
       }
 
