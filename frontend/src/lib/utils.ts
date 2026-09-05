@@ -2,8 +2,8 @@ import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { toast } from 'sonner'
 import { HttpError } from './repository/http-error'
-import { httpClient } from './repository/http-client'
 import { useNavigate } from '@tanstack/react-router'
+import { httpClient } from './repository/http-client'
 
 const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs))
@@ -167,7 +167,7 @@ const textToSpeech = async (text: string) => {
   } else {
     const apiKey = import.meta.env.VITE_ELEVEN_LAB_API_KEY
     // if web speech API is not supported switch to eleven lab TTS API
-    const response = await httpClient.post(
+    const response = await httpClient.download(
       'https://api.elevenlabs.io/v1/text-to-speech/JBFqnCBsd6RMkjVDRZzb',
       {
         text,
@@ -178,16 +178,15 @@ const textToSpeech = async (text: string) => {
         },
       },
       {
+        credentials: 'omit',
         headers: {
           'Content-Type': 'application/json',
           ...(apiKey && { 'xi-api-key': apiKey }),
         },
-        credentials: 'omit'
       }
     )
 
-    if (!response.ok) throw new Error('Failed to generate speech')
-    const blob = await response.blob()
+    const blob = response.data
     const url = URL.createObjectURL(blob)
     const audio = new Audio(url)
     audio.onended = () => {
@@ -197,4 +196,9 @@ const textToSpeech = async (text: string) => {
   }
 }
 
-export { cn, showResponseError, slugify, alpha, getPageNumbers, stripHtml, formatDuration, textToSpeech }
+const getBaseUrl = () => {
+  if (typeof window !== 'undefined') return window.location.origin
+  return import.meta.env.VITE_API_URL
+}
+
+export { cn, showResponseError, slugify, alpha, getPageNumbers, stripHtml, formatDuration, textToSpeech, getBaseUrl }
