@@ -12,8 +12,6 @@ export type Banner = {
 export type BannerPayload = {
   image?: string
   isActive?: boolean
-  order?: FormDataEntryValue | number
-  [key: string]: FormDataEntryValue | string | number | boolean | undefined
 }
 
 export type BannerFilter = ApiQueryParams & {
@@ -32,6 +30,10 @@ export type CreateBannerParams = {
 export type UpdateBannerParams = {
   id: EntityId
   banner: BannerPayload
+}
+
+export type ReorderBannersParams = {
+  ids: EntityId[]
 }
 
 export type DeleteBannerParams = DeleteParams

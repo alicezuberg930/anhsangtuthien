@@ -1,6 +1,23 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import {
-  type SortingState,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  type DragEndEvent,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import {
+  type Row,
   type VisibilityState,
   flexRender,
   getCoreRowModel,
@@ -8,9 +25,9 @@ import {
   getFacetedUniqueValues,
   getFilteredRowModel,
   getPaginationRowModel,
-  getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
+import { GripVertical } from 'lucide-react'
 import { type Banner } from '@/@types/banner'
 import {
   DataTablePagination,
@@ -24,6 +41,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Button } from '@/components/ui/button'
+import { useReorderBannersHook } from '@/hooks/banner.hook'
 import { useTableUrlState, type NavigateFn } from '@/hooks/use-table-url-state'
 import { bannersColumns as columns } from './banners-columns'
 
@@ -38,10 +57,69 @@ const activeOptions = [
   { label: 'Đang tắt', value: 'false' },
 ]
 
+type SortableBannerRowProps = {
+  row: Row<Banner>
+  disabled: boolean
+}
+
+const SortableBannerRow = ({ row, disabled }: SortableBannerRowProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: row.original._id, disabled })
+  const style: CSSProperties = {
+    transform: transform
+      ? CSS.Transform.toString({ ...transform, x: 0 })
+      : undefined,
+    transition,
+    opacity: isDragging ? 0.8 : 1,
+    position: 'relative',
+    zIndex: isDragging ? 1 : 0,
+  }
+
+  return (
+    <TableRow
+      ref={setNodeRef}
+      style={style}
+      data-state={row.getIsSelected() ? 'selected' : undefined}
+    >
+      <TableCell className='w-10'>
+        <Button
+          type='button'
+          variant='ghost'
+          size='icon-sm'
+          className='cursor-grab touch-none text-muted-foreground active:cursor-grabbing'
+          disabled={disabled}
+          aria-label='Kéo để thay đổi thứ tự'
+          title='Kéo để thay đổi thứ tự'
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical />
+        </Button>
+      </TableCell>
+      {row.getVisibleCells().map((cell) => (
+        <TableCell key={cell.id}>
+          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+        </TableCell>
+      ))}
+    </TableRow>
+  )
+}
+
 export const BannersTable = ({ data, search, navigate }: BannersTableProps) => {
+  const [orderedData, setOrderedData] = useState(data)
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [sorting, setSorting] = useState<SortingState>([])
+  const reorderBanners = useReorderBannersHook()
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  )
 
   const {
     columnFilters,
@@ -61,25 +139,24 @@ export const BannersTable = ({ data, search, navigate }: BannersTableProps) => {
   })
 
   const table = useReactTable({
-    data,
+    data: orderedData,
     columns,
+    getRowId: (row) => row._id,
     state: {
-      sorting,
       pagination,
       rowSelection,
       columnFilters,
       columnVisibility,
     },
+    enableSorting: false,
     enableRowSelection: true,
     onPaginationChange,
     onColumnFiltersChange,
     onRowSelectionChange: setRowSelection,
-    onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
     getPaginationRowModel: getPaginationRowModel(),
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
   })
@@ -87,6 +164,34 @@ export const BannersTable = ({ data, search, navigate }: BannersTableProps) => {
   useEffect(() => {
     ensurePageInRange(table.getPageCount())
   }, [table, ensurePageInRange])
+
+  useEffect(() => {
+    setOrderedData(data)
+  }, [data])
+
+  const handleDragEnd = async ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id || reorderBanners.isPending) return
+
+    const oldIndex = orderedData.findIndex((banner) => banner._id === active.id)
+    const newIndex = orderedData.findIndex((banner) => banner._id === over.id)
+    if (oldIndex === -1 || newIndex === -1) return
+
+    const previousData = orderedData
+    const nextData = arrayMove(orderedData, oldIndex, newIndex).map(
+      (banner, index) => ({ ...banner, order: index + 1 })
+    )
+    setOrderedData(nextData)
+
+    try {
+      await reorderBanners.mutateAsync({
+        ids: nextData.map((banner) => banner._id),
+      })
+    } catch {
+      setOrderedData(previousData)
+    }
+  }
+
+  const rows = table.getRowModel().rows
 
   return (
     <div className='flex flex-1 flex-col gap-4'>
@@ -103,49 +208,56 @@ export const BannersTable = ({ data, search, navigate }: BannersTableProps) => {
         ]}
       />
       <div className='table-scroll overflow-hidden rounded-md border'>
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} colSpan={header.colSpan}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  <TableHead className='w-10' />
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id} colSpan={header.colSpan}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                    </TableHead>
                   ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className='h-24 text-center'
+              ))}
+            </TableHeader>
+            <TableBody>
+              {rows.length ? (
+                <SortableContext
+                  items={rows.map((row) => row.original._id)}
+                  strategy={verticalListSortingStrategy}
                 >
-                  Không có banner.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+                  {rows.map((row) => (
+                    <SortableBannerRow
+                      key={row.id}
+                      row={row}
+                      disabled={reorderBanners.isPending}
+                    />
+                  ))}
+                </SortableContext>
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length + 1}
+                    className='h-24 text-center'
+                  >
+                    Không có banner.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </DndContext>
       </div>
       <DataTablePagination table={table} className='mt-auto' />
     </div>

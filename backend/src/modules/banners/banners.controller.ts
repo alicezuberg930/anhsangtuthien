@@ -4,6 +4,7 @@ import { BannerData } from './dto/create-banner.dto'
 import { UpdateBannerData } from './dto/update-banner.dto'
 import { ResponseMessage } from '../../common/decorators/public.decorator'
 import { QueryBanner } from './dto/query-banner.dto'
+import { ReorderBannersData } from './dto/reorder-banners.dto'
 
 @Controller('banners')
 export class BannersController {
@@ -25,6 +26,12 @@ export class BannersController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.bannersService.findOne(id)
+  }
+
+  @ResponseMessage('Cập nhật thứ tự banner thành công')
+  @Patch('reorder')
+  reorder(@Body() reorderData: ReorderBannersData) {
+    return this.bannersService.reorder(reorderData)
   }
 
   @ResponseMessage('Cập nhật banner thành công')

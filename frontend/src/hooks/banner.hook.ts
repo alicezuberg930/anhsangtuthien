@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { createBanner, deleteBanner, getBannerDetails, getBanners, updateBanner } from "../services/api.service"
+import { createBanner, deleteBanner, getBannerDetails, getBanners, reorderBanners, updateBanner } from "../services/api.service"
 import { toast } from "sonner"
 import { API } from "../lib/api"
 import { showResponseError } from "../lib/utils"
@@ -11,6 +11,7 @@ import type {
     CreateBannerParams,
     DeleteBannerParams,
     GetBannerDetailsParams,
+    ReorderBannersParams,
     UpdateBannerParams,
 } from "@/@types/banner"
 
@@ -54,6 +55,20 @@ export const useUpdateBannerHook = () => {
     const queryClient = useQueryClient()
     return useMutation<BannerMutationResponse, unknown, UpdateBannerParams>({
         mutationFn: ({ id, banner }) => updateBanner({ id, banner }),
+        onSuccess(data) {
+            toast.success(data.message)
+            queryClient.invalidateQueries({ queryKey: [API.BANNERS] })
+        },
+        onError(error) {
+            showResponseError(error)
+        },
+    })
+}
+
+export const useReorderBannersHook = () => {
+    const queryClient = useQueryClient()
+    return useMutation<BannerMutationResponse, unknown, ReorderBannersParams>({
+        mutationFn: ({ ids }) => reorderBanners({ ids }),
         onSuccess(data) {
             toast.success(data.message)
             queryClient.invalidateQueries({ queryKey: [API.BANNERS] })

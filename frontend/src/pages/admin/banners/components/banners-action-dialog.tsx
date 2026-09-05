@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { type Resolver, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { type Banner, type BannerPayload } from '@/@types/banner'
-import { FormProvider, RHFSwitch, RHFTextField, RHFUpload } from '@/components/hook-form'
+import { FormProvider, RHFSwitch, RHFUpload } from '@/components/hook-form'
 import { isLocalUploadImage, type UploadImage } from '@/components/upload'
 import { Button } from '@/components/ui/button'
 import {
@@ -18,13 +18,11 @@ import { files } from '@/lib/queries/file'
 import { useMutation } from '@tanstack/react-query'
 
 type BannerFormValues = {
-  order: string
   isActive: boolean
   image: UploadImage | null
 }
 
 const bannerFormSchema = z.object({
-  order: z.string().trim().min(1, 'Vui lòng nhập thứ tự.'),
   isActive: z.boolean(),
   image: z.custom<UploadImage>(
     (value) => typeof value === 'string' || (typeof value === 'object' && value !== null),
@@ -54,7 +52,6 @@ const zodResolver: Resolver<BannerFormValues> = async (values) => {
 }
 
 const defaultValues = (banner?: Banner): BannerFormValues => ({
-  order: banner?.order !== undefined ? String(banner.order) : '',
   isActive: banner?.isActive ?? false,
   image: banner?.image ?? null,
 })
@@ -99,7 +96,6 @@ export const BannersActionDialog = ({
       }
 
       const banner: BannerPayload = {
-        order: values.order,
         isActive: values.isActive,
         image: imageUrl,
       }
@@ -138,12 +134,6 @@ export const BannersActionDialog = ({
           onSubmit={form.handleSubmit(onSubmit)}
         >
           <div className='space-y-4'>
-            <RHFTextField
-              name='order'
-              fieldLabel='Thứ tự'
-              type='number'
-              placeholder='Nhập thứ tự'
-            />
             <RHFSwitch
               name='isActive'
               label='Kích hoạt'

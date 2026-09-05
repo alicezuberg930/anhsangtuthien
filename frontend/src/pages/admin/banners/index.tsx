@@ -11,8 +11,7 @@ import { BannersTable } from './components/banners-table'
 const route = getRouteApi('/cms/banner/list')
 
 const BannersPage = () => {
-  const filter = { page: 1 }
-  const { data: banners, isLoading } = useGetBannersHook(filter)
+  const { data: banners, isLoading } = useGetBannersHook()
   const search = route.useSearch()
   const navigate = route.useNavigate() as NavigateFn
 

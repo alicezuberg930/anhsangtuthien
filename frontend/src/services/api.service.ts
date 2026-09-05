@@ -12,6 +12,7 @@ import type {
     DeleteBannerParams,
     GetBannerDetailsParams,
     GetBannersParams,
+    ReorderBannersParams,
     UpdateBannerParams,
 } from '@/@types/banner'
 import type {
@@ -40,6 +41,10 @@ export const createBanner = async ({ banner }: CreateBannerParams) => {
 
 export const updateBanner = async ({ id, banner }: UpdateBannerParams) => {
     return httpClient.patch<BannerMutationResponse>(`${API.BANNERS}/${id}`, banner)
+}
+
+export const reorderBanners = async ({ ids }: ReorderBannersParams) => {
+    return httpClient.patch<BannerMutationResponse>(`${API.BANNERS}/reorder`, { ids })
 }
 
 export const deleteBanner = async ({ id }: DeleteBannerParams) => {
