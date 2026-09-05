@@ -1,9 +1,8 @@
 import { type ApiResponse } from '@/@types'
 import { HttpError } from './http-error'
 import { InterceptorManager } from './interceptor'
-import { getBaseUrl } from '../utils'
 
-const BASE_URL = getBaseUrl()
+const BASE_URL = import.meta.env.VITE_API_URL
 
 export type ResponseWithHeaders<T> = {
   data: T

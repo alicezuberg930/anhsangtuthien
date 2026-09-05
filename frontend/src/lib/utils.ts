@@ -196,6 +196,4 @@ const textToSpeech = async (text: string) => {
   }
 }
 
-const getBaseUrl = () => import.meta.env.VITE_API_URL
-
-export { cn, showResponseError, slugify, alpha, getPageNumbers, stripHtml, formatDuration, textToSpeech, getBaseUrl }
+export { cn, showResponseError, slugify, alpha, getPageNumbers, stripHtml, formatDuration, textToSpeech }
